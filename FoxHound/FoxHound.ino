@@ -1,5 +1,7 @@
 
 #include "EasyCommParser.h"
+#include "config.h"
+#include "PosSensor.h"
 
 /*
 * https://github.com/martinhj/LSM303DLHCreading/blob/master/LSM303DLHC.ino
@@ -35,7 +37,7 @@ enum RotatorState
   CCW,
   UP,
   DN
-}
+};
 
 RotatorState prevState;
 RotatorState nextState;
@@ -53,13 +55,13 @@ void UpdateFlag(int &updateFlag)
 {
   //checks next AZ pos - current AZ pos.
   updateFlag |= ((nextAz - currentAz) > 0);
-  updateFlag |= ((nextAz - currentAx) < 0);
+  updateFlag |= ((nextAz - currentAz) < 0);
   updateFlag |= ((nextAz - currentAz) == 0);
 
   //checks next EL pos - current EL pos.
   updateFlag |= ((nextEl - currentEl) > 0);
   updateFlag |= ((nextEl - currentEl) < 0);
-  updateFlag |= ((nextEl - currentEl) == 0));
+  updateFlag |= ((nextEl - currentEl) == 0);
 }
 
 void ClearFlag(int &updateFlag)
@@ -67,29 +69,70 @@ void ClearFlag(int &updateFlag)
   updateFlag = 0;
 }
 
+void ResetAntenna()
+{
+
+}
+
+void MoveAz(RotatorState curState)
+{
+  switch(curState)
+  {
+    case CW:
+      //move antenna CW
+      digitalWrite(AZ_DIR_PIN, 0);
+      analogWrite(AZ_SPEED_PIN, SET_AZ_SPEED/4);
+    break;
+    case CCW:
+      //move antenna CCW
+      digitalWrite(AZ_DIR_PIN, 1);
+      analogWrite(AZ_SPEED_PIN, SET_AZ_SPEED/4);
+    break;
+  }
+}
+
+void MoveEl(RotatorState curState)
+{
+   switch(curState)
+   {
+    case UP:
+      //move antenna UP
+      digitalWrite(EL_DIR_PIN, 0);
+      analogWrite(EL_SPEED_PIN, SET_EL_SPEED/4);
+    break;
+    case DN:
+      //move antenna DOWN
+      digitalWrite(EL_DIR_PIN, 1);
+      analogWrite(EL_SPEED_PIN, SET_EL_SPEED/4);
+    break;
+   }
+}
+
+
 /*run each state within setup() or loop() */
 void RunState()
 {
    switch(nextState) 
    {
-     case RotatorState.RESET:
+     case RESET:
        //TODO: reset antenna rotator to (AZ: 0, EL: 0)
+       ResetAntenna();
      break;
-     case RotatorState.IDLE:
+     case IDLE:
       //TODO: hold antenna position
      break;
-     case RotatorState.CW:
-      //TODO: move antenna clockwise
+     case CW:
+       MoveAz(nextState);
      break;
-     case RotatorState.CCW:
-     //TODO: move antenna counter-clockwise
+     case CCW:
+       MoveAz(nextState);
      break;
-     case RotatorState.UP:
-     //TODO: move antenna up
+     case UP:
+       MoveEl(nextState);
      break;
-     case RotatorState.DN:
-     //TODO: move antenn down.
-     break;
+     case DN:
+       MoveEl(nextState);
+     break; 
      default:
      break;
    }
@@ -99,8 +142,12 @@ void RunState()
 void setup() 
 {
   // fix serial port at 9600 baud for now.
-  Serial.begin(9600);
-  ToggleState(RotatorState.IDLE); //default machine state to IDLE. 
+  Serial.begin(BAUD_RATE);
+  pinMode(AZ_SPEED_PIN, OUTPUT);
+  pinMode(AZ_DIR_PIN, OUTPUT);
+  pinMode(EL_SPEED_PIN, OUTPUT);
+  pinMode(EL_DIR_PIN, OUTPUT);
+  ToggleState(IDLE); //default machine state to IDLE. 
   ClearFlag(inputFlag); 
 }
 
@@ -114,27 +161,27 @@ void loop()
     switch(inputFlag) 
     {
        case 0: //00000000
-          ToggleState(RotatorState.RESET);
+          ToggleState(RESET);
        break;
        case 9: //00001001
-          ToggleState(RotatorState.IDLE);
+          ToggleState(IDLE);
        break;
        case 33: //00100001
-          ToggleState(RotatorState.CW);
+          ToggleState(CW);
        break;
        case 17: //00010001
-          ToggleState(RotatorState.CCW);
+          ToggleState(CCW);
        break;
        case 12: //00001100
-          ToggleState(RotatorState.DN);
+          ToggleState(DN);
        break;
        case 10: //00001010
-          ToggleState(RotatorState.UP);
+          ToggleState(UP);
     }
 
   } else 
   {
-    ToggleState(RotatorState.IDLE);
+    ToggleState(IDLE);
   }
     RunState(); //run out state.
 }
