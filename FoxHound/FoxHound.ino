@@ -3,13 +3,6 @@
 #include "config.h"
 #include "PosSensor.h"
 
-/*
-* https://github.com/martinhj/LSM303DLHCreading/blob/master/LSM303DLHC.ino
-* example code to add the correct sensor needed for rotator.
-* this will get compass bearings and accelrometer readings...
-*
-*/
-
 
 //current pos from accelrometer:
 double currentAz = 0.0;

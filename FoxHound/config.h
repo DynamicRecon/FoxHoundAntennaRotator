@@ -4,6 +4,13 @@
 #include <math.h>
 #include <Arduino.h>
 
+/*
+* https://github.com/martinhj/LSM303DLHCreading/blob/master/LSM303DLHC.ino
+* example code to add the correct sensor needed for rotator.
+* this will get compass bearings and accelrometer readings...
+*
+*/
+
 const int BAUD_RATE = 9600;
 
 const int AZ_DIR_PIN = 4;  // 1 = CCW, 0 = CW
