@@ -112,18 +112,10 @@ void setup()
 
 void loop() 
 {
-   // any data from serial event;
    bufferRx = parser.Parse(nextAz, nextEl);
    notify_pos(currentAz, currentEl); //update position from sensor.
-
-   run_state(); //toggle state.
-   move_to_target(); //move antenna.
-}
-
-/*pulls next pos of rotator from com port*/
-void serialEvent() 
-{
-   parser.Parse(nextAz, nextEl);
    parser.SetAz(currentAz);
    parser.SetEl(currentEl);
+   run_state(); //toggle state.
+   move_to_target(); //move antenna.
 }
