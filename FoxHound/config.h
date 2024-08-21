@@ -14,6 +14,8 @@ const int EL_DIR_PIN = 7; // 1 = DN, 0 = UP
 const int EL_SPEED_PIN = 6; //PWM pin.
 const int SET_EL_SPEED = 2;
 
+const double BEAM_WIDTH = 5.0;
+
 // LSM303DLHC acceerometer I2C address is 0x19(25)
 const int  ADDR_ACC1 = 0x19;
 // LSM303DLHC magnetometer I2C address is 0x1E(30)

@@ -5,4 +5,8 @@
 #include <Arduino.h>
 #include "config.h"
 
+void setup_sensor();
+
+void notify_pos(double &curAz, double &curEl);
+
 #endif

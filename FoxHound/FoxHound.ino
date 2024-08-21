@@ -11,10 +11,6 @@
 */
 
 
-
-//rotator machine input int flag (antenna position)
-int inputFlag = 0;
-
 //current pos from accelrometer:
 double currentAz = 0.0;
 double currentEl = 0.0;
@@ -31,7 +27,6 @@ EasyCommParser parser;
 
 enum RotatorState
 {
-  RESET,
   IDLE,
   CW,
   CCW,
@@ -39,45 +34,23 @@ enum RotatorState
   DN
 };
 
-RotatorState prevState;
-RotatorState nextState;
+RotatorState prevState = IDLE;
+RotatorState nextState = IDLE;
 
 /* Toggle the states of the Rotator 
 *  Switch between prevState -> nextState of machine.
 */
-void ToggleState(RotatorState toggleState)
+void toggle_state(RotatorState toggleState)
 {
   prevState = nextState; //store current state.
   nextState = toggleState; //toggle to next state.
 }
 
-void UpdateFlag(int &updateFlag)
+
+void move_to_target()
 {
-  //checks next AZ pos - current AZ pos.
-  updateFlag |= ((nextAz - currentAz) > 0);
-  updateFlag |= ((nextAz - currentAz) < 0);
-  updateFlag |= ((nextAz - currentAz) == 0);
-
-  //checks next EL pos - current EL pos.
-  updateFlag |= ((nextEl - currentEl) > 0);
-  updateFlag |= ((nextEl - currentEl) < 0);
-  updateFlag |= ((nextEl - currentEl) == 0);
-}
-
-void ClearFlag(int &updateFlag)
-{
-  updateFlag = 0;
-}
-
-void ResetAntenna()
-{
-
-}
-
-void MoveAz(RotatorState curState)
-{
-  switch(curState)
-  {
+ switch(nextState)
+ {
     case CW:
       //move antenna CW
       digitalWrite(AZ_DIR_PIN, 0);
@@ -88,13 +61,6 @@ void MoveAz(RotatorState curState)
       digitalWrite(AZ_DIR_PIN, 1);
       analogWrite(AZ_SPEED_PIN, SET_AZ_SPEED/4);
     break;
-  }
-}
-
-void MoveEl(RotatorState curState)
-{
-   switch(curState)
-   {
     case UP:
       //move antenna UP
       digitalWrite(EL_DIR_PIN, 0);
@@ -105,36 +71,29 @@ void MoveEl(RotatorState curState)
       digitalWrite(EL_DIR_PIN, 1);
       analogWrite(EL_SPEED_PIN, SET_EL_SPEED/4);
     break;
-   }
+  }
+
 }
 
 
 /*run each state within setup() or loop() */
-void RunState()
+void run_state()
 {
-   switch(nextState) 
+   if ((nextAz - currentAz) == BEAM_WIDTH && (nextEl - currentEl) == BEAM_WIDTH)
    {
-     case RESET:
-       //TODO: reset antenna rotator to (AZ: 0, EL: 0)
-       ResetAntenna();
-     break;
-     case IDLE:
-      //TODO: hold antenna position
-     break;
-     case CW:
-       MoveAz(nextState);
-     break;
-     case CCW:
-       MoveAz(nextState);
-     break;
-     case UP:
-       MoveEl(nextState);
-     break;
-     case DN:
-       MoveEl(nextState);
-     break; 
-     default:
-     break;
+      toggle_state(IDLE);
+   } else if ((nextAz - currentAz) > BEAM_WIDTH)
+   {
+      toggle_state(CW);
+   } else if ((nextAz - currentAz) < BEAM_WIDTH)
+   {
+      toggle_state(CCW);
+   } else if ((nextEl - currentEl) >  BEAM_WIDTH)
+   {
+      toggle_state(UP);
+   } else if ((nextEl - currentEl) < BEAM_WIDTH)
+   {
+      toggle_state(DN);
    }
 }
 
@@ -147,43 +106,18 @@ void setup()
   pinMode(AZ_DIR_PIN, OUTPUT);
   pinMode(EL_SPEED_PIN, OUTPUT);
   pinMode(EL_DIR_PIN, OUTPUT);
-  ToggleState(IDLE); //default machine state to IDLE. 
-  ClearFlag(inputFlag); 
+  toggle_state(IDLE); //default machine state to IDLE. 
+  setup_sensor();
 }
 
 void loop() 
 {
-  // any data from serial event;
-  bufferRx = parser.Parse(nextAz, nextEl);
-  if(bufferRx > 0)
-  {
-    UpdateFlag(inputFlag); //updates flag from a range of bool flags.
-    switch(inputFlag) 
-    {
-       case 0: //00000000
-          ToggleState(RESET);
-       break;
-       case 9: //00001001
-          ToggleState(IDLE);
-       break;
-       case 33: //00100001
-          ToggleState(CW);
-       break;
-       case 17: //00010001
-          ToggleState(CCW);
-       break;
-       case 12: //00001100
-          ToggleState(DN);
-       break;
-       case 10: //00001010
-          ToggleState(UP);
-    }
+   // any data from serial event;
+   bufferRx = parser.Parse(nextAz, nextEl);
+   notify_pos(currentAz, currentEl); //update position from sensor.
 
-  } else 
-  {
-    ToggleState(IDLE);
-  }
-    RunState(); //run out state.
+   run_state(); //toggle state.
+   move_to_target(); //move antenna.
 }
 
 /*pulls next pos of rotator from com port*/
