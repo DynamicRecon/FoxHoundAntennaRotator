@@ -63,7 +63,7 @@ int EasyCommParser::Parse(double &gotoAz, double &gotoEl)
     while(Serial.available() > 0) 
 	  {
 		 incomingByte = Serial.read();
-    if (incomingByte == '\n' || incomingByte == '\r') {
+     if (incomingByte == '\n' || incomingByte == '\r') {
 		  buffer[bufferCnt] = 0;
 		  if(buffer[0] == 'A' && buffer[1] == 'Z') 
 		  {
