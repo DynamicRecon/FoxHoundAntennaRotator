@@ -57,11 +57,55 @@ double get_inclination()
 
 double get_azimuth()
 {
+   unsigned int data[6];
+   // Start I2C Transmission
+  Wire.beginTransmission(ADDR_MAG);
+  // Select CRA register
+  Wire.write(0x00);
+  // Temperatuer disabled, Data output rate = 15Hz
+  Wire.write(0x10);
+  // Stop I2C Transmission
+  Wire.endTransmission();
+
+   // Start I2C Transmission
+  Wire.beginTransmission(ADDR_MAG);
+  // Select gain configuration register
+  Wire.write(0x01);
+  // Gain +/-1.3
+  Wire.write(0x20);
+  // Stop I2C Transmission
+  Wire.endTransmission();
+
+  for (int i = 0; i < 6; i++)
+  {
+    // Start I2C Transmission
+    Wire.beginTransmission(ADDR_MAG);
+    // Select data register
+    Wire.write((3 + i));
+    // Stop I2C Transmission
+    Wire.endTransmission();
+
+    // Request 6 byte of data
+    // xAccl lsb, xAccl msb, yAccl lsb, yAccl msb, zAccl lsb, zAccl msb
+    Wire.requestFrom(ADDR_MAG, 1);
+
+    if (Wire.available() == 1)
+    {
+      data[i] = Wire.read();
+    }
+  }
+
+    // Convert the data
+    int xMag =  (data[0] * 256) + data[1];
+    int yMag =  (data[4] * 256) + data[5];
+    int zMag =  (data[2] * 256) + data[3];
+
+   return atan2(yMag, xMag) * 180 / M_PI; //return Azimuth
 
 }
 
 void notify_pos(double &curAz, double &curEl)
 {
   curEl = get_inclination();
-
+  curAz = get_azimuth();
 }
