@@ -13,11 +13,14 @@
 *
 */
 
+//startup sensor.
 void setup_sensor();
 
+//seperate functions
 double get_inclination();
 double get_azimuth();
 
+//return position from sensor
 void notify_pos(double &curAz, double &curEl);
 
 #endif

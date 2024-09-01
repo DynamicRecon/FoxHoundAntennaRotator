@@ -46,23 +46,27 @@ void move_to_target()
  {
     case CW:
       //move antenna CW
-      digitalWrite(AZ_DIR_PIN, 0);
-      analogWrite(AZ_SPEED_PIN, SET_AZ_SPEED/4);
+      digitalWrite(AZ_DIR_PIN_A, 0);
+      digitalWrite(AZ_DIR_PIN_B, 1);
     break;
     case CCW:
       //move antenna CCW
-      digitalWrite(AZ_DIR_PIN, 1);
-      analogWrite(AZ_SPEED_PIN, SET_AZ_SPEED/4);
+      digitalWrite(AZ_DIR_PIN_A, 1);
+      digitalWrite(AZ_DIR_PIN_B, 0);
     break;
     case UP:
       //move antenna UP
-      digitalWrite(EL_DIR_PIN, 0);
-      analogWrite(EL_SPEED_PIN, SET_EL_SPEED/4);
+      digitalWrite(EL_DIR_PIN_A, 0);
+      digitalWrite(EL_DIR_PIN_B, 1);
     break;
     case DN:
       //move antenna DOWN
-      digitalWrite(EL_DIR_PIN, 1);
-      analogWrite(EL_SPEED_PIN, SET_EL_SPEED/4);
+      digitalWrite(EL_DIR_PIN_A, 1);
+      digitalWrite(EL_DIR_PIN_B, 0);
+    break;
+    case IDLE:
+      digitalWrite(EL_DIR_PIN_A, 0);
+      digitalWrite(EL_DIR_PIN_B, 0);
     break;
   }
 
@@ -95,10 +99,10 @@ void setup()
 {
   // fix serial port at 9600 baud for now.
   Serial.begin(BAUD_RATE);
-  pinMode(AZ_SPEED_PIN, OUTPUT);
-  pinMode(AZ_DIR_PIN, OUTPUT);
-  pinMode(EL_SPEED_PIN, OUTPUT);
-  pinMode(EL_DIR_PIN, OUTPUT);
+  pinMode(AZ_DIR_PIN_A, OUTPUT);
+  pinMode(AZ_DIR_PIN_B, OUTPUT);
+  pinMode(EL_DIR_PIN_A, OUTPUT);
+  pinMode(EL_DIR_PIN_B, OUTPUT);
   toggle_state(IDLE); //default machine state to IDLE. 
   setup_sensor();
 }

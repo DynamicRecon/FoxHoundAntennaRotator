@@ -8,14 +8,15 @@
 
 const int BAUD_RATE = 9600;
 
-const int AZ_DIR_PIN = 4;  // 1 = CCW, 0 = CW
-const int AZ_SPEED_PIN = 3; //PWM pin.
-const int SET_AZ_SPEED = 2;
+//AZ direction pins (set speed by controller)
+const int AZ_DIR_PIN_B = 4; 
+const int AZ_DIR_PIN_A = 3; 
 
-const int EL_DIR_PIN = 7; // 1 = DN, 0 = UP
-const int EL_SPEED_PIN = 6; //PWM pin.
-const int SET_EL_SPEED = 2;
+//EL direction pins (set speed by controller)
+const int EL_DIR_PIN_B = 7;
+const int EL_DIR_PIN_A = 6; 
 
+//beamwidth of antenna to keep tracking sat signal from falling out.
 const double BEAM_WIDTH = 5.0;
 
 // LSM303DLHC acceerometer I2C address is 0x19(25)
@@ -29,9 +30,11 @@ const int SerialSpeed = 19200;
 const int StepDelay = 50; //in ms
 
 
+//math helper funcs
 float DegToRads(float);
 float RadsToDegs(float);
 
+//direct set variables from arduino analog pins (if neeeded)
 float SetNewTurnRate(int);
 int SetNewTimeStep(int);
 
