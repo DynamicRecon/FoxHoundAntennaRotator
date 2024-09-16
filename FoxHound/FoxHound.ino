@@ -46,11 +46,15 @@ void move_to_target()
  {
     case CW:
       //move antenna CW
+      digitalWrite(EL_DIR_PIN_A, 0);
+      digitalWrite(EL_DIR_PIN_B, 0);
       digitalWrite(AZ_DIR_PIN_A, 0);
       digitalWrite(AZ_DIR_PIN_B, 1);
     break;
     case CCW:
       //move antenna CCW
+      digitalWrite(EL_DIR_PIN_A, 0);
+      digitalWrite(EL_DIR_PIN_B, 0);
       digitalWrite(AZ_DIR_PIN_A, 1);
       digitalWrite(AZ_DIR_PIN_B, 0);
     break;
@@ -58,15 +62,21 @@ void move_to_target()
       //move antenna UP
       digitalWrite(EL_DIR_PIN_A, 0);
       digitalWrite(EL_DIR_PIN_B, 1);
+      digitalWrite(AZ_DIR_PIN_A, 0);
+      digitalWrite(AZ_DIR_PIN_B, 0);
     break;
     case DN:
       //move antenna DOWN
       digitalWrite(EL_DIR_PIN_A, 1);
       digitalWrite(EL_DIR_PIN_B, 0);
+      digitalWrite(AZ_DIR_PIN_A, 0);
+      digitalWrite(AZ_DIR_PIN_B, 0);
     break;
     case IDLE:
       digitalWrite(EL_DIR_PIN_A, 0);
       digitalWrite(EL_DIR_PIN_B, 0);
+      digitalWrite(AZ_DIR_PIN_A, 0);
+      digitalWrite(AZ_DIR_PIN_B, 0);
     break;
   }
 
@@ -104,15 +114,16 @@ void setup()
   pinMode(EL_DIR_PIN_A, OUTPUT);
   pinMode(EL_DIR_PIN_B, OUTPUT);
   toggle_state(IDLE); //default machine state to IDLE. 
-  setup_sensor();
+  //setup_sensor();
 }
 
 void loop() 
 {
-   bufferRx = parser.Parse(nextAz, nextEl);
-   notify_pos(currentAz, currentEl); //update position from sensor.
+   parser.Parse(nextAz, nextEl);
+   //notify_pos(currentAz, currentEl); //update position from sensor.
    parser.SetAz(currentAz);
    parser.SetEl(currentEl);
    run_state(); //toggle state.
    move_to_target(); //move antenna.
+   delay(STEP_DELAY);
 }
