@@ -18,6 +18,7 @@ int bufferRx = 0;
 //setup serial port EasyComm parser.
 EasyCommParser parser;
 
+/*Enum of antenna's current state.*/
 enum RotatorState
 {
   IDLE,
@@ -27,11 +28,13 @@ enum RotatorState
   DN
 };
 
+//Rotator state variables.
 RotatorState prevState = IDLE;
 RotatorState nextState = IDLE;
 
 /* Toggle the states of the Rotator 
 *  Switch between prevState -> nextState of machine.
+*  returns void.
 */
 void toggle_state(RotatorState toggleState)
 {
@@ -39,7 +42,10 @@ void toggle_state(RotatorState toggleState)
   nextState = toggleState; //toggle to next state.
 }
 
-
+/*
+ * procedure turns on the motors in the rotator to poiint the antenna.
+ * returns void.
+*/
 void move_to_target()
 {
  switch(nextState)
@@ -73,6 +79,7 @@ void move_to_target()
       digitalWrite(AZ_DIR_PIN_B, 0);
     break;
     case IDLE:
+      //stop.
       digitalWrite(EL_DIR_PIN_A, 0);
       digitalWrite(EL_DIR_PIN_B, 0);
       digitalWrite(AZ_DIR_PIN_A, 0);
@@ -83,7 +90,12 @@ void move_to_target()
 }
 
 
-/*run each state within setup() or loop() */
+/*
+* procedure calculates any difference in changes between next rotation and current position
+* then toggle's the antennas state from IDLE -> CW, CCW, UP, DN states to adjust
+* the antennas rotation.
+* returns void.
+*/
 void run_state()
 {
    if ((nextAz - currentAz) == BEAM_WIDTH && (nextEl - currentEl) == BEAM_WIDTH)
@@ -119,11 +131,11 @@ void setup()
 
 void loop() 
 {
-   notify_pos(currentAz, currentEl);
-   parser.SetAz(currentAz);
-   parser.SetEl(currentEl);
-   parser.Parse(nextAz, nextEl);
+   notify_pos(currentAz, currentEl); //get state from sensor.
+   parser.SetAz(currentAz); //set AZ state back to computer.
+   parser.SetEl(currentEl); //set EL state back to computer.
+   parser.Parse(nextAz, nextEl); //Parse incoming data and send out data to serial.
    run_state(); //toggle state.
    move_to_target(); //move antenna.
-   delay(STEP_DELAY);
+   delay(STEP_DELAY); //wait.
 }
