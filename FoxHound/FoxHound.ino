@@ -114,15 +114,15 @@ void setup()
   pinMode(EL_DIR_PIN_A, OUTPUT);
   pinMode(EL_DIR_PIN_B, OUTPUT);
   toggle_state(IDLE); //default machine state to IDLE. 
-  //setup_sensor();
+  setup_sensor();
 }
 
 void loop() 
 {
-   parser.Parse(nextAz, nextEl);
-   //notify_pos(currentAz, currentEl); //update position from sensor.
+   notify_pos(currentAz, currentEl);
    parser.SetAz(currentAz);
    parser.SetEl(currentEl);
+   parser.Parse(nextAz, nextEl);
    run_state(); //toggle state.
    move_to_target(); //move antenna.
    delay(STEP_DELAY);
