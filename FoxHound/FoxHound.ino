@@ -131,11 +131,14 @@ void setup()
 
 void loop() 
 {
-   notify_pos(currentAz, currentEl); //get state from sensor.
-   parser.SetAz(currentAz); //set AZ state back to computer.
-   parser.SetEl(currentEl); //set EL state back to computer.
-   parser.Parse(nextAz, nextEl); //Parse incoming data and send out data to serial.
-   run_state(); //toggle state.
-   move_to_target(); //move antenna.
-   delay(STEP_DELAY); //wait.
+  notify_pos(currentAz, currentEl); //get state from sensor.
+  //  parser.SetAz(currentAz); //set AZ state back to computer.
+  //  parser.SetEl(currentEl); //set EL state back to computer.
+  //  parser.Parse(nextAz, nextEl); //Parse incoming data and send out data to serial.
+  //  run_state(); //toggle state.
+  //  move_to_target(); //move antenna.
+  //test to make sure sensor is reporting.
+  Serial.println("Current AZ: " + String(currentAz, 4) + " Deg...");
+  Serial.println("Current EL: " + String(currentEl, 4) + " Deg...");
+  delay(STEP_DELAY); //wait.
 }

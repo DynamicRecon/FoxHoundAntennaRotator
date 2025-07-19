@@ -7,7 +7,7 @@
 
 
 const int BAUD_RATE = 19200;
-const int STEP_DELAY = 50; //ms
+const int STEP_DELAY = 5000; //ms
 
 //AZ direction pins (set speed by controller)
 const int AZ_DIR_PIN_B = 4; 

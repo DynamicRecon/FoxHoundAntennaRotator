@@ -17,10 +17,13 @@
 void setup_sensor();
 
 //seperate functions
-double get_inclination();
-double get_azimuth();
+void get_inclination_xy(int &accX, int &accY, int &accZ);
+void get_azimuth_xy(int &magX, int &magY, int &magZ);
 
 //return position from sensor
 void notify_pos(double &curAz, double &curEl);
+
+//test
+int assert(const char *type, double test_value);
 
 #endif
