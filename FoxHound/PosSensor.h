@@ -7,22 +7,11 @@
 
 /*
 * Uses two potiemeters to measure the turning of the shaft.
+* Reads 0 to 1023 to 0 to 360 degree integer value.
+* not accurate but with 5 deg beam width. This could be corrected.
 */
 
-
-//startup sensor.
-void setup_sensor();
-
-//seperate functions
-// void get_inclination_xy(int &accX, int &accY, int &accZ);
-// void get_azimuth_xy(int &magX, int &magY, int &magZ);
-
-void calibrate_device();
 float get_azimuth();
 float get_inclination();
-
-
-//return position from sensor
-// void notify_pos(double &curAz, double &curEl);
 
 #endif

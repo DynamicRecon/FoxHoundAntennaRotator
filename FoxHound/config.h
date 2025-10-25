@@ -24,11 +24,6 @@ const int EL_POS_READ = A5;
 //beamwidth of antenna to keep tracking sat signal from falling out.
 const double BEAM_WIDTH = 5.0;
 
-// LSM303DLHC acceerometer I2C address is 0x19(25)
-const int  ADDR_ACC1 = 0x19;
-// LSM303DLHC magnetometer I2C address is 0x1E(30)
-const int ADDR_MAG = 0x1E;
-
 //set Serial Speed for HamLib 
 //and StepDelay for Rotator.
 const int SerialSpeed = 19200;
@@ -38,10 +33,6 @@ const int StepDelay = 50; //in ms
 //math helper funcs
 float DegToRads(float);
 float RadsToDegs(float);
-
-//direct set variables from arduino analog pins (if neeeded)
-float SetNewTurnRate(int);
-int SetNewTimeStep(int);
 
 
 #endif
