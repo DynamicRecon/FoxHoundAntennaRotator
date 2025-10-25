@@ -17,6 +17,10 @@ const int AZ_DIR_PIN_A = 3;
 const int EL_DIR_PIN_B = 7;
 const int EL_DIR_PIN_A = 6; 
 
+//AZ potiemeter pin
+const int AZ_POS_READ = A4;
+const int EL_POS_READ = A5;
+
 //beamwidth of antenna to keep tracking sat signal from falling out.
 const double BEAM_WIDTH = 5.0;
 

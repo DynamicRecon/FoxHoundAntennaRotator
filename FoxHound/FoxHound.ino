@@ -1,7 +1,10 @@
 
+
+
 #include "EasyCommParser.h"
-#include "config.h"
 #include "PosSensor.h"
+#include "config.h"
+
 
 
 //current pos from accelrometer:
@@ -90,6 +93,7 @@ void move_to_target()
 }
 
 
+
 /*
 * procedure calculates any difference in changes between next rotation and current position
 * then toggle's the antennas state from IDLE -> CW, CCW, UP, DN states to adjust
@@ -126,19 +130,17 @@ void setup()
   pinMode(EL_DIR_PIN_A, OUTPUT);
   pinMode(EL_DIR_PIN_B, OUTPUT);
   toggle_state(IDLE); //default machine state to IDLE. 
-  setup_sensor();
+  
 }
 
 void loop() 
 {
-  notify_pos(currentAz, currentEl); //get state from sensor.
-  //  parser.SetAz(currentAz); //set AZ state back to computer.
-  //  parser.SetEl(currentEl); //set EL state back to computer.
-  //  parser.Parse(nextAz, nextEl); //Parse incoming data and send out data to serial.
+  currentAz = get_azimuth();
+  currentEl = get_inclination();
+   parser.SetAz(currentAz); //set AZ state back to computer.
+   parser.SetEl(currentEl); //set EL state back to computer.
+   parser.Parse(nextAz, nextEl); //Parse incoming data and send out data to serial.
   //  run_state(); //toggle state.
   //  move_to_target(); //move antenna.
-  //test to make sure sensor is reporting.
-  Serial.println("Current AZ: " + String(currentAz, 4) + " Deg...");
-  Serial.println("Current EL: " + String(currentEl, 4) + " Deg...");
   delay(STEP_DELAY); //wait.
 }

@@ -1,5 +1,6 @@
 #include "PosSensor.h"
 
+
 double right_triangle_distance(int a, int b)
 {
   return sqrt(pow(a, 2) + pow(b, 2));
@@ -8,62 +9,79 @@ double right_triangle_distance(int a, int b)
 
 void setup_sensor()
 {
-   Wire.begin();
-   delay(300);
+  delay(300);
 }
 
-void get_inclination_xy(int &accX, int &accY, int &accZ)
+/*
+* calibrate_device(): calibrates the LSM303 Sensor for use.
+* Both Magnetometer and Accelrometer
+*/
+void calibrate_device() 
 {
-  unsigned int data[6];
-  // Start I2C transmission
-  Wire.beginTransmission(ADDR_ACC1);
-  // Select control register 1
-  Wire.write(0x20);
-  // Enable X, Y, Z-Axis
-  Wire.write(0x27);
-  // Stop I2C transmission
-  Wire.endTransmission();
-
-  // Start I2C transmission
-  Wire.beginTransmission(ADDR_ACC1);
-  // Select control register 4
-  Wire.write(0x23);
-  // Full scale 2000 dps, continuous update
-  Wire.write(0x00);
-  // Stop I2C transmission
-  Wire.endTransmission();
-
-  for (int i = 0; i < 6; i++)
-  {
-    // Start I2C Transmission
-    Wire.beginTransmission(ADDR_ACC1);
-    // Select data register
-    Wire.write((40 + i));
-    // Stop I2C Transmission
-    Wire.endTransmission();
-
-    // Request 6 byte of data
-    // xAccl lsb, xAccl msb, yAccl lsb, yAccl msb, zAccl lsb, zAccl msb
-    Wire.requestFrom(ADDR_ACC1, 1);
-
-    if (Wire.available() == 1)
-    {
-      data[i] = Wire.read();
-    }
-  }
-
-   // Convert the data
-  int xAccl =  (data[1] * 256) + data[0];
-  int yAccl =  (data[3] * 256) + data[2];
-  int zAccl =  (data[5] * 256) + data[4];
   
-  //pass by values
-  accX = xAccl;
-  accY = yAccl;
-  accZ = zAccl;
-
 }
 
+float get_azimuth()
+{
+  int pot_deg = map(analogRead(AZ_POS_READ),0,1023,0,360);
+  return pot_deg;
+}
+
+float get_inclination()
+{
+  int pot_deg = map(analogRead(EL_POS_READ),0,1023,0,360);
+  return pot_deg;
+}
+
+// void get_inclination_xy(int &accX, int &accY, int &accZ) {
+//   unsigned int data[6];
+//   // Start I2C transmission
+//   Wire.beginTransmission(ADDR_ACC1);
+//   // Select control register 1
+//   Wire.write(0x20);
+//   // Enable X, Y, Z-Axis
+//   Wire.write(0x27);
+//   // Stop I2C transmission
+//   Wire.endTransmission();
+
+//   // Start I2C transmission
+//   Wire.beginTransmission(ADDR_ACC1);
+//   // Select control register 4
+//   Wire.write(0x23);
+//   // Full scale 2000 dps, continuous update
+//   Wire.write(0x00);
+//   // Stop I2C transmission
+//   Wire.endTransmission();
+
+//   for (int i = 0; i < 6; i++) {
+//     // Start I2C Transmission
+//     Wire.beginTransmission(ADDR_ACC1);
+//     // Select data register
+//     Wire.write((40 + i));
+//     // Stop I2C Transmission
+//     Wire.endTransmission();
+
+//     // Request 6 byte of data
+//     // xAccl lsb, xAccl msb, yAccl lsb, yAccl msb, zAccl lsb, zAccl msb
+//     Wire.requestFrom(ADDR_ACC1, 1);
+
+//     if (Wire.available() == 1) {
+//       data[i] = Wire.read();
+//     }
+//   }
+
+//   // Convert the data
+//   int xAccl = (data[1] * 256) + data[0];
+//   int yAccl = (data[3] * 256) + data[2];
+//   int zAccl = (data[5] * 256) + data[4];
+
+//   //pass by values
+//   accX = xAccl;
+//   accY = yAccl;
+//   accZ = zAccl;
+// }
+
+/*
 void get_azimuth_xy(int &magX, int &magY, int &magZ)
 {
    unsigned int data[6];
@@ -125,12 +143,9 @@ void get_azimuth_xy(int &magX, int &magY, int &magZ)
    magZ = zMag;
 
 }
+*/
 
-int assert(const char *type, double test_value)
-{
-   
-}
-
+/*
 void notify_pos(double &curAz, double &curEl)
 {
   unsigned int data[6];
@@ -145,3 +160,4 @@ void notify_pos(double &curAz, double &curEl)
   get_azimuth_xy(xMag, yMag, zMag);
   curAz = atan2(yMag, xMag) * 180 / M_PI; //antenna rotator heading
 }
+*/
