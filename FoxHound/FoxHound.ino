@@ -120,7 +120,6 @@ void run_state()
    }
 }
 
-
 void setup() 
 {
   // fix serial port at 9600 baud for now.
@@ -135,12 +134,32 @@ void setup()
 
 void loop() 
 {
+  //return values from potiemeters.
   currentAz = get_azimuth();
   currentEl = get_inclination();
+  //get values from gpredict.
    parser.SetAz(currentAz); //set AZ state back to computer.
    parser.SetEl(currentEl); //set EL state back to computer.
    parser.Parse(nextAz, nextEl); //Parse incoming data and send out data to serial.
-  //  run_state(); //toggle state.
-  //  move_to_target(); //move antenna.
+
+   //make sure reset or stop flag is not set to true. If not then move to target.
+   if(parser.GetReset()) 
+   {
+      //stop antenna. then move to 0 degrees.
+      toggle_state(IDLE);
+      run_state(); //toggle state.
+      move_to_target(); //move antenna.
+   } 
+   else if (parser.GetStop())
+   {
+      //just stop.
+      toggle_state(IDLE);
+   } 
+   else 
+   {
+      //  run_state(); //toggle state.
+     //  move_to_target(); //move antenna.
+   }
+    
   delay(STEP_DELAY); //wait.
 }

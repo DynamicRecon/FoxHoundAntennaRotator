@@ -27,7 +27,6 @@ bool EasyCommParser::GetReset()
   return _orderReset;
 }
 
-
 void EasyCommParser::Initialize() 
 {
   
@@ -63,7 +62,8 @@ int EasyCommParser::Parse(double &gotoAz, double &gotoEl)
     while(Serial.available() > 0) 
 	  {
 		 incomingByte = Serial.read();
-     if (incomingByte == '\n' || incomingByte == '\r') {
+     if (incomingByte == '\n' || incomingByte == '\r') 
+		 {
 		  buffer[bufferCnt] = 0;
 		  if(buffer[0] == 'A' && buffer[1] == 'Z') 
 		  {
@@ -111,10 +111,11 @@ int EasyCommParser::Parse(double &gotoAz, double &gotoEl)
 		    Serial.print("AZ");
 			  Serial.print(" ");
 			  Serial.print("EL");
-			  _currentAz = gotoAz = 0;
-			  _currentEl = gotoEl = 0;
+			  gotoAz = 0;
+			  gotoEl = 0;
 			  _orderReset = true;
 		  }
+
 		  bufferCnt = 0;
 		/*else up count*/
 		} 

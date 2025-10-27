@@ -28,7 +28,7 @@ class EasyCommParser
 	  void  SetEl(double);
 	  bool GetStop();
 	  bool GetReset();
-    void Initialize();
+		void Initialize();
 	  int Parse(double &gotoAz, double &gotoEl);
 };
 
