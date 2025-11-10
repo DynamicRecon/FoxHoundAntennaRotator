@@ -157,8 +157,8 @@ void loop()
    } 
    else 
    {
-      //  run_state(); //toggle state.
-     //  move_to_target(); //move antenna.
+      run_state(); //toggle state.
+      move_to_target(); //move antenna.
    }
     
   delay(STEP_DELAY); //wait.
