@@ -1,22 +1,31 @@
 #ifndef POSSENSOR_H
 #define POSSENSOR_H
 
-#include <Arduino.h>
-#include <Math.h>
-#include "config.h"
+#include<Arduino.h>
+#include<Math.h>
+#include<Wire.h>
+#include <EEPROM.h>
 
-//offset for shaft gears to get accurate position feedback. 
-const int AZ_RATIO = 1.92; 
-const int EL_RATIO = 1.92; 
+#include "MyMath.h"
 
+enum SensorType 
+{
+   LSM303D,
+   LSM303DLHC
+};
 
-/*
-* Uses two potiemeters to measure the turning of the shaft.
-* Reads 0 to 1023 to 0 to 360 degree integer value.
-* not accurate but with 5 deg beam width. This could be corrected.
-*/
+struct Cal 
+{
+    int Offset;
+    int Scale;
+    int Min;
+    int Max;
+};
 
-float get_azimuth();
-float get_inclination();
+struct Cal _lsmCal;
+
+void ResetCal(struct Cal *ptrCal);
+void ComputeCal(struct Cal *ptrCal);
+void SampleCal(struct Cal *ptrCal, int a, bool changed);
 
 #endif

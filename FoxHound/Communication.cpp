@@ -1,6 +1,5 @@
-#include "Arduino.h"
-#include "EasyCommParser.h"
-#include "config.h"
+#include "Communication.h"
+
 
 /*
  Getter properties for Parser,
@@ -78,6 +77,11 @@ int EasyCommParser::Parse(double &gotoAz, double &gotoEl)
       {
 				rawData = strtok_r(data, " ", &data);
 				strncpy(Data, rawData+2, 10);
+
+				//if flags then reset flags
+				if(_orderReset) _orderReset = false;
+				if(_orderStop) _orderStop = false;
+				
 				if(_IsNumber(Data))
 				{
 					_newAz = atof(Data);

@@ -1,25 +1,8 @@
 
-
-
-#include "EasyCommParser.h"
-#include "PosSensor.h"
-#include "config.h"
-
-
-
-//current pos from accelrometer:
-double currentAz = 0.0;
-double currentEl = 0.0;
-
-//next position from Com Port:
-double nextAz = 0.0;
-double nextEl = 0.0;
-
-//count of chars recieved from com port:
-int bufferRx = 0;
-
-//setup serial port EasyComm parser.
-EasyCommParser parser;
+#include "Communication.h"
+#include "Motor.h"
+#include "MyMath.h"
+#include "defs.h"
 
 /*Enum of antenna's current state.*/
 enum RotatorState
@@ -31,6 +14,25 @@ enum RotatorState
   DN
 };
 
+enum RotatorMode
+{
+  TRACKING, 
+  MONITORING, 
+  DEMONSTRATING, 
+  CALIBRATING, 
+  DEBUGGING, 
+  PAUSING
+};    //Rotator controller modes
+
+RotatorMode _prevMode = TRACKING;
+RotatorMode _nextMode = TRACKING;
+
+void _ToggleMode(RotatorMode toggleMode) 
+{
+  _prevMode = _nextMode;
+  _nextMode = toggleMode;
+}
+
 //Rotator state variables.
 RotatorState prevState = IDLE;
 RotatorState nextState = IDLE;
@@ -39,54 +41,93 @@ RotatorState nextState = IDLE;
 *  Switch between prevState -> nextState of machine.
 *  returns void.
 */
-void toggle_state(RotatorState toggleState)
+void _ToggleState(RotatorState toggleState)
 {
   prevState = nextState; //store current state.
   nextState = toggleState; //toggle to next state.
 }
 
+bool windup;            //Antenna windup condition
+
+/* Fox Hound Rotator Struct */
+struct FoxHoundTable 
+{
+  float Az;               //Antenna azimuth
+  float El;               //Antenna elevation
+  float AzSet;            //Antenna azimuth set point
+  float ElSet;            //Antenna elevation set point
+  float AzLast;           //Last antenna azimuth reading
+  float ElLast;           //Last antenna element reading
+  float AzWindup;         //Antenna windup angle from startup azimuth position
+  float AzOffset;         //Antenna azimuth offset for whole revolutions
+  float AzSpeed;          //Antenna azimuth motor speed
+  float ElSpeed;          //Antenna elevation motor speed
+  float AzError;          //Antenna azimuth error
+  float ElError;          //Antenna elevation error
+  float AzInc;            //AZ increment for demo mode
+  float ElInc;            //EL increment for demo mode
+};
+
+void _ResetRotator(struct FoxHoundTable *ptrTable, bool getCal) 
+{
+  //Reset the rotator table.
+  ptrTable->AzSet = 0.0;
+  ptrTable->ElSet = 0.0;
+  ptrTable->AzLast = 0.0;
+  ptrTable->ElLast = 0.0;
+  ptrTable->AzWindup = 0.0;
+  ptrTable->AzOffset = 0.0;
+  ptrTable->AzSpeed = 0.0;
+  ptrTable->ElSpeed = 0.0;
+  ptrTable->AzError = 0.0;
+  ptrTable->ElError = 0.0;
+  ptrTable->AzInc = 0.05;
+  ptrTable->ElInc = 0.05;
+  
+  //reset calibration setting in eeprom.
+  if(getCal) 
+  {
+
+  }
+
+  //restore Rotator Mode to: TRACKING.
+  _ToggleMode(TRACKING);
+
+}
+
+//count of chars recieved from com port:
+int _bufferRx = 0;
+
+//setup serial port EasyComm parser.
+EasyCommParser parser;
+
 /*
  * procedure turns on the motors in the rotator to poiint the antenna.
  * returns void.
 */
-void move_to_target()
+void _MoveToTarget()
 {
  switch(nextState)
  {
     case CW:
       //move antenna CW
-      digitalWrite(EL_DIR_PIN_A, 0);
-      digitalWrite(EL_DIR_PIN_B, 0);
-      digitalWrite(AZ_DIR_PIN_A, 0);
-      digitalWrite(AZ_DIR_PIN_B, 1);
+      
     break;
     case CCW:
       //move antenna CCW
-      digitalWrite(EL_DIR_PIN_A, 0);
-      digitalWrite(EL_DIR_PIN_B, 0);
-      digitalWrite(AZ_DIR_PIN_A, 1);
-      digitalWrite(AZ_DIR_PIN_B, 0);
+      
     break;
     case UP:
       //move antenna UP
-      digitalWrite(EL_DIR_PIN_A, 0);
-      digitalWrite(EL_DIR_PIN_B, 1);
-      digitalWrite(AZ_DIR_PIN_A, 0);
-      digitalWrite(AZ_DIR_PIN_B, 0);
+      
     break;
     case DN:
       //move antenna DOWN
-      digitalWrite(EL_DIR_PIN_A, 1);
-      digitalWrite(EL_DIR_PIN_B, 0);
-      digitalWrite(AZ_DIR_PIN_A, 0);
-      digitalWrite(AZ_DIR_PIN_B, 0);
+      
     break;
     case IDLE:
       //stop.
-      digitalWrite(EL_DIR_PIN_A, 0);
-      digitalWrite(EL_DIR_PIN_B, 0);
-      digitalWrite(AZ_DIR_PIN_A, 0);
-      digitalWrite(AZ_DIR_PIN_B, 0);
+      
     break;
   }
 
@@ -100,66 +141,32 @@ void move_to_target()
 * the antennas rotation.
 * returns void.
 */
-void run_state()
+void RunState()
 {
-   if ((nextAz - currentAz) == BEAM_WIDTH && (nextEl - currentEl) == BEAM_WIDTH)
-   {
-      toggle_state(IDLE);
-   } else if ((nextAz - currentAz) > BEAM_WIDTH)
-   {
-      toggle_state(CW);
-   } else if ((nextAz - currentAz) < BEAM_WIDTH)
-   {
-      toggle_state(CCW);
-   } else if ((nextEl - currentEl) >  BEAM_WIDTH)
-   {
-      toggle_state(UP);
-   } else if ((nextEl - currentEl) < BEAM_WIDTH)
-   {
-      toggle_state(DN);
-   }
+   
 }
 
 void setup() 
 {
   // fix serial port at 9600 baud for now.
   Serial.begin(BAUD_RATE);
-  pinMode(AZ_DIR_PIN_A, OUTPUT);
-  pinMode(AZ_DIR_PIN_B, OUTPUT);
-  pinMode(EL_DIR_PIN_A, OUTPUT);
-  pinMode(EL_DIR_PIN_B, OUTPUT);
-  toggle_state(IDLE); //default machine state to IDLE. 
+  //Set speaker pins to outputs
+  pinMode(SPKPIN, OUTPUT);
+  pinMode(GNDPIN, OUTPUT);
+  digitalWrite(GNDPIN, LOW);
+
+  pinMode(AZBRKPIN, OUTPUT);
+  pinMode(ELBRKPIN, OUTPUT);
+  digitalWrite(AZBRKPIN, LOW);
+  digitalWrite(ELBRKPIN, LOW);
+  
+  _ToggleState(IDLE); //default machine state to IDLE. 
+  _MoveToTarget();
   
 }
 
 void loop() 
 {
-  //return values from potiemeters.
-  currentAz = get_azimuth();
-  currentEl = get_inclination();
-  //get values from gpredict.
-   parser.SetAz(currentAz); //set AZ state back to computer.
-   parser.SetEl(currentEl); //set EL state back to computer.
-   parser.Parse(nextAz, nextEl); //Parse incoming data and send out data to serial.
-
-   //make sure reset or stop flag is not set to true. If not then move to target.
-   if(parser.GetReset()) 
-   {
-      //stop antenna. then move to 0 degrees.
-      toggle_state(IDLE);
-      run_state(); //toggle state.
-      move_to_target(); //move antenna.
-   } 
-   else if (parser.GetStop())
-   {
-      //just stop.
-      toggle_state(IDLE);
-   } 
-   else 
-   {
-      run_state(); //toggle state.
-      move_to_target(); //move antenna.
-   }
-    
+  
   delay(STEP_DELAY); //wait.
 }

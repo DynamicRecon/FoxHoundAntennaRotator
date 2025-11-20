@@ -1,15 +1,35 @@
 #include "PosSensor.h"
 
-float get_azimuth()
+void ResetCal(struct Cal *ptrCal)
 {
-  float pot_deg = map(analogRead(AZ_POS_READ),0,1023,0,360);
-  float shaft_deg = pot_deg / AZ_RATIO; //convert to shaft gear position.
-  return shaft_deg;
+  struct Cal newCal = { 0, 0, 32767, -32768 };
+  ptrCal = &newCal;
 }
 
-float get_inclination()
+void ComputeCal(struct Cal *ptrCal)
 {
-  float pot_deg = map(analogRead(EL_POS_READ),0,1023,0,360);
-  float shaft_deg = pot_deg / AZ_RATIO; //convert to shaft gear position.
-  return pot_deg;
+
+  int min = ptrCal->Min;
+  int max = ptrCal->Max;
+   //Compute the offset and scaling factors
+  ptrCal->Offset = int((long(max) + long(min)) / 2L);
+  ptrCal->Scale = int((long(max) - long(min)) / 2L);
+}
+
+void SampleCal(struct Cal *ptrCal, int a, bool changed)
+{
+  //Process a new calibration sample
+  if (a > ptrCal->Max) 
+  {
+    ptrCal->Max = a;
+    ComputeCal(ptrCal);
+    changed = true;
+  }
+  if (a < ptrCal->Min) 
+  {
+    ptrCal->Min = a;
+    ComputeCal(ptrCal);
+    changed = true;
+  }
+  return changed;
 }

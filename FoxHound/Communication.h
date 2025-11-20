@@ -1,11 +1,27 @@
-#include "Arduino.h"
+#ifndef COMMUNICATION_H
+#define COMMUNICATION_H
+
+#include <Arduino.h>
 #include <WString.h>
 
-#ifndef EASYCOMMPARSER_H
-#define EASYCOMMPARSER_H
 
-#define BufferSize 256
-#define DataSize 100
+#include "defs.h"
+#include "consts.h"
+#include "MyMath.h"
+
+enum Tokens 
+{
+	UNKNOWN,
+	KEYWORD,
+	NUMBER,
+	OPERATOR,
+	EOL
+};
+
+struct Token {
+	Tokens tok;
+	char *value;
+};
 
 /*
   EasyCommParser Class:
