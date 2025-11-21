@@ -7,6 +7,7 @@
 #include <EEPROM.h>
 
 #include "MyMath.h"
+#include "defs.h"
 
 enum SensorType 
 {
@@ -14,18 +15,23 @@ enum SensorType
    LSM303DLHC
 };
 
-struct Cal 
+struct Lsm 
 {
-    int Offset;
-    int Scale;
-    int Min;
-    int Max;
+  SensorType Type;
+  float Alpha;
+  int LastPass;
+  int Mx, My, Mz, Gx, Gy, Gz;
+  float Md, Az, El;
+  Vec Me, Ge, Ms, Gs;
 };
 
-struct Cal _lsmCal;
 
-void ResetCal(struct Cal *ptrCal);
-void ComputeCal(struct Cal *ptrCal);
-void SampleCal(struct Cal *ptrCal, int a, bool changed);
+
+void Begin(struct Lsm *lsm);
+bool Calibrate(struct Lsm *lsm);
+void ReadGM(struct Lsm *lsm);
+Vec GetVector(struct Lsm *lsm); //converts sensor data to vector.
+void ResetSensor(struct Lsm *lsm);
+void CalStart(struct Lsm *lsm);
 
 #endif

@@ -104,7 +104,8 @@ EasyCommParser parser;
 bool windup;            //Antenna windup condition
 struct Timer _t1; //timer struct
 struct FoxHoundTable _table;
-
+struct MotorData _azMot = { FWDREV, 25, 0.5, 0, AZFWDPIN, AZREVPIN, 0 }; //AZ Motor Settings
+struct MotorData _elMot = { FWDREV, 25, 0.5, 0, ELFWDPIN, ELREVPIN, 0 }; //EL Motor Settings
 /*
  * procedure turns on the motors in the rotator to poiint the antenna.
  * returns void.
@@ -140,7 +141,7 @@ void _MoveToTarget()
 
 void SetMode()
 {
-  switch(nextMode)
+  switch(_nextMode)
   {
     case DEBUGGING:
     break;

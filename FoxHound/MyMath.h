@@ -22,6 +22,8 @@ class Vec {
 float DegToRads(float);
 float RadsToDegs(float);
 float DiffAngle(float a, float b);
+double VecDistance(Vec a, Vec b);
+Vec AzElToVec(double az, double el, int r);
 float Lpf(float Value, float alpha, int last);
 
 #endif

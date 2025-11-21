@@ -81,3 +81,13 @@ float Lpf(float Value, float alpha, int last)
   last = result;
   return result;
 }
+
+double VecDistance(Vec a, Vec b)
+{
+  double dx = b.i - a.i;
+  double dy = b.j - a.j;
+  double dz = b.k - a.k;
+
+  double dv = pow(dx, 2) + pow(dy, 2) + pow(dz, 2);
+  return sqrt(dv);
+}

@@ -20,10 +20,6 @@
 #define BufferSize 256
 #define DataSize 100
 
-//Sensor type definitions
-#define LSM303D 0     //For LSM303D sensor
-#define LSM303DLHC 1  //For LSM303DLHC sensor
-
 //LSM303D Registers
 #define LSM303D_ADDRESS 0b0011101
 #define LSM303D_OUT_X_L_A 0x28
