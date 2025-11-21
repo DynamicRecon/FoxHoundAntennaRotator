@@ -2,6 +2,7 @@
 #include "Communication.h"
 #include "Motor.h"
 #include "MyMath.h"
+#include "Timer.h"
 #include "defs.h"
 
 /*Enum of antenna's current state.*/
@@ -46,8 +47,6 @@ void _ToggleState(RotatorState toggleState)
   prevState = nextState; //store current state.
   nextState = toggleState; //toggle to next state.
 }
-
-bool windup;            //Antenna windup condition
 
 /* Fox Hound Rotator Struct */
 struct FoxHoundTable 
@@ -101,6 +100,11 @@ int _bufferRx = 0;
 //setup serial port EasyComm parser.
 EasyCommParser parser;
 
+
+bool windup;            //Antenna windup condition
+struct Timer _t1; //timer struct
+struct FoxHoundTable _table;
+
 /*
  * procedure turns on the motors in the rotator to poiint the antenna.
  * returns void.
@@ -134,16 +138,19 @@ void _MoveToTarget()
 }
 
 
-
-/*
-* procedure calculates any difference in changes between next rotation and current position
-* then toggle's the antennas state from IDLE -> CW, CCW, UP, DN states to adjust
-* the antennas rotation.
-* returns void.
-*/
-void RunState()
+void SetMode()
 {
-   
+  switch(nextMode)
+  {
+    case DEBUGGING:
+    break;
+    case CALIBRATING:
+    break;
+    case PAUSING:
+    break;
+    default:
+    break;
+  }
 }
 
 void setup() 
@@ -159,9 +166,9 @@ void setup()
   pinMode(ELBRKPIN, OUTPUT);
   digitalWrite(AZBRKPIN, LOW);
   digitalWrite(ELBRKPIN, LOW);
-  
-  _ToggleState(IDLE); //default machine state to IDLE. 
-  _MoveToTarget();
+
+  TimerReset(&_t1, 100);
+  _ResetRotator(&_table, true);
   
 }
 

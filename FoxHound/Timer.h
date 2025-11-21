@@ -10,7 +10,7 @@ struct Timer {
    long Last;
 };
 
-void Reset(struct Timer *ptrTimer, long period);
+void TimerReset(struct Timer *ptrTimer, long period);
 bool Timeout(struct Timer *ptrTimer);
 long Elapsed(struct Timer *ptrTimer);
 long Periods(struct Timer *ptrTimer);

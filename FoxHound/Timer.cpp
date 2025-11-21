@@ -1,6 +1,6 @@
 #include "Timer.h"
 
-void Reset(struct Timer *ptrTimer, long period)
+void TimerReset(struct Timer *ptrTimer, long period)
 {
   ptrTimer->Start = millis();
   ptrTimer->Last = 0;

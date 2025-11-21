@@ -65,8 +65,16 @@ float DiffAngle(float a, float b)
   return diff;
 }
 
+Vec AzElToVec(double az, double el, int r)
+{
+   double x = r * cos(el) * cos(az);
+   double y = r * cos(el) * sin(az);
+   double z = r * sin(el);
+   return Vec(float(x), float(y), float(z));
+}
+
 /*Low Pass Filter for smoothing waveforms*/
-float lpf(float Value, float alpha, int last) 
+float Lpf(float Value, float alpha, int last) 
 {
   //Low pass filter - Decrease alpha to increase damping factor
   float result = (alpha * Value) + last * (1 - alpha);
