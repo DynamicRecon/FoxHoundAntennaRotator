@@ -1,6 +1,7 @@
 
 #include "Communication.h"
 #include "Motor.h"
+#include "PosSensor.h"
 #include "MyMath.h"
 #include "Timer.h"
 #include "defs.h"
@@ -14,25 +15,6 @@ enum RotatorState
   UP,
   DN
 };
-
-enum RotatorMode
-{
-  TRACKING, 
-  MONITORING, 
-  DEMONSTRATING, 
-  CALIBRATING, 
-  DEBUGGING, 
-  PAUSING
-};    //Rotator controller modes
-
-RotatorMode _prevMode = TRACKING;
-RotatorMode _nextMode = TRACKING;
-
-void _ToggleMode(RotatorMode toggleMode) 
-{
-  _prevMode = _nextMode;
-  _nextMode = toggleMode;
-}
 
 //Rotator state variables.
 RotatorState prevState = IDLE;
@@ -48,49 +30,41 @@ void _ToggleState(RotatorState toggleState)
   nextState = toggleState; //toggle to next state.
 }
 
-/* Fox Hound Rotator Struct */
+/* Fox Hound Rotator Table Data. Gets Vectors for calculation to next position of rotator. */
 struct FoxHoundTable 
 {
   float Az;               //Antenna azimuth
   float El;               //Antenna elevation
-  float AzSet;            //Antenna azimuth set point
-  float ElSet;            //Antenna elevation set point
-  float AzLast;           //Last antenna azimuth reading
-  float ElLast;           //Last antenna element reading
-  float AzWindup;         //Antenna windup angle from startup azimuth position
-  float AzOffset;         //Antenna azimuth offset for whole revolutions
-  float AzSpeed;          //Antenna azimuth motor speed
-  float ElSpeed;          //Antenna elevation motor speed
-  float AzError;          //Antenna azimuth error
-  float ElError;          //Antenna elevation error
-  float AzInc;            //AZ increment for demo mode
-  float ElInc;            //EL increment for demo mode
+  Vec AntennaPos;         //antenna position
+  double AzSet;            //Antenna azimuth set point
+  double ElSet;            //Antenna elevation set point
+  Vec Target;              //Target Vector
+  double AzLast;           //Last antenna azimuth reading
+  double ElLast;           //Last antenna element reading
+  float AzError;          //Get Diff to Target Vector Azimuth
+  float ElError;         //Get Diff to Target Vector Elevation
 };
 
-void _ResetRotator(struct FoxHoundTable *ptrTable, bool getCal) 
+void _ResetRotator(struct FoxHoundTable Table, bool getCal) 
 {
   //Reset the rotator table.
-  ptrTable->AzSet = 0.0;
-  ptrTable->ElSet = 0.0;
-  ptrTable->AzLast = 0.0;
-  ptrTable->ElLast = 0.0;
-  ptrTable->AzWindup = 0.0;
-  ptrTable->AzOffset = 0.0;
-  ptrTable->AzSpeed = 0.0;
-  ptrTable->ElSpeed = 0.0;
-  ptrTable->AzError = 0.0;
-  ptrTable->ElError = 0.0;
-  ptrTable->AzInc = 0.05;
-  ptrTable->ElInc = 0.05;
-  
+  Table.AzSet = 0.0;
+  Table.ElSet = 0.0;
+  Table.AzLast = 0.0;
+  Table.ElLast = 0.0;
+  Table.AzError = 0.0f;
+  Table.ElError = 0.0f;
+  Table.AntennaPos = Vec(0.0,0.0,0.0);
+  Table.Target = Vec(0.0,0.0,0.0);
+
   //reset calibration setting in eeprom.
   if(getCal) 
   {
-
+    _Restore();
   }
 
   //restore Rotator Mode to: TRACKING.
-  _ToggleMode(TRACKING);
+  ToggleMode(TRACKING);
 
 }
 
@@ -106,6 +80,63 @@ struct Timer _t1; //timer struct
 struct FoxHoundTable _table;
 struct MotorData _azMot = { FWDREV, 25, 0.5, 0, AZFWDPIN, AZREVPIN, 0 }; //AZ Motor Settings
 struct MotorData _elMot = { FWDREV, 25, 0.5, 0, ELFWDPIN, ELREVPIN, 0 }; //EL Motor Settings
+
+struct Lsm _posSensor;
+
+void _Save() {
+  //Save the calibration data to EEPROM
+  EEPROM.put(0, _posSensor.Cal);
+}
+
+void _Restore() {
+  //Restore the calibration data from EEPROM
+  EEPROM.get(0, _posSensor.Cal);
+}
+
+void _PrintDebug() 
+{
+  //Print raw sensor data
+  Serial.print(_posSensor.Mx); Serial.print(",");
+  Serial.print(_posSensor.My); Serial.print(",");
+  Serial.print(_posSensor.Mz); Serial.print(",");
+  Serial.print(_posSensor.Gx); Serial.print(",");
+  Serial.print(_posSensor.Gy); Serial.print(",");
+  Serial.println(_posSensor.Gz);
+}
+
+void _PrintCal() 
+{
+  //Print the calibration data
+  Serial.print(_posSensor.Cal.Md, 1); Serial.print(",");
+  Serial.print(_posSensor.Cal.Me.i, 1); Serial.print(",");
+  Serial.print(_posSensor.Cal.Me.j, 1); Serial.print(",");
+  Serial.print(_posSensor.Cal.Me.k, 1); Serial.print(",");
+  Serial.print(_posSensor.Cal.Ge.i, 1); Serial.print(",");
+  Serial.print(_posSensor.Cal.Ge.j, 1); Serial.print(",");
+  Serial.print(_posSensor.Cal.Ge.k, 1); Serial.print(",");
+  Serial.print(_posSensor.Cal.Ms.i, 1); Serial.print(",");
+  Serial.print(_posSensor.Cal.Ms.j, 1); Serial.print(",");
+  Serial.print(_posSensor.Cal.Ms.k, 1); Serial.print(",");
+  Serial.print(_posSensor.Cal.Gs.i, 1); Serial.print(",");
+  Serial.print(_posSensor.Cal.Gs.j, 1); Serial.print(",");
+  Serial.println(_posSensor.Cal.Gs.k, 1);
+}
+
+void _Calibrate() 
+{
+  //Process raw accelerometer and magnetometer samples
+  bool changed = Calibrate(&_posSensor);
+  //Print any changes and beep the speaker to facilitate manual calibration
+  if (changed) 
+  {
+    digitalWrite(SPKPIN, HIGH);     //Sound the piezo buzzer
+    _PrintCal();                     //Print the calibration data
+  } else 
+  {
+    digitalWrite(SPKPIN, LOW);      //Silence the piezo buzzer
+  }
+}
+
 /*
  * procedure turns on the motors in the rotator to poiint the antenna.
  * returns void.
@@ -138,18 +169,23 @@ void _MoveToTarget()
 
 }
 
-
-void SetMode()
+/*gets Arduino State. Then processes accordingly...*/
+void _ProcessPosition()
 {
-  switch(_nextMode)
+  ReadGM(&_posSensor);
+  switch(GetCurrentMode())
   {
     case DEBUGGING:
+      _PrintDebug();
     break;
     case CALIBRATING:
+      _Calibrate(); //Do a sensor Calibration.
     break;
     case PAUSING:
+      Halt(&_azMot); //Halt Azimuth Motor
+      Halt(&_elMot); //Halt Elevation Motor
     break;
-    default:
+    default: //Otherwise start Tracking...
     break;
   }
 }
@@ -168,13 +204,20 @@ void setup()
   digitalWrite(AZBRKPIN, LOW);
   digitalWrite(ELBRKPIN, LOW);
 
+  _posSensor.Type = LSM303DLHC;
+  _posSensor.Alpha = 0.02;
+
+  Begin(&_posSensor);
+
   TimerReset(&_t1, 100);
-  _ResetRotator(&_table, true);
+  _ResetRotator(_table, true);
   
 }
 
 void loop() 
 {
-  
+  ProcessCommands(_table.AzSet, _table.ElSet); //get one letter commands from Serial Monitor
+  Execute(&_t1, &_ProcessPosition);
+  _MoveToTarget();
   delay(STEP_DELAY); //wait.
 }

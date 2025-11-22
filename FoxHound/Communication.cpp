@@ -1,5 +1,95 @@
 #include "Communication.h"
 
+RotatorMode _PrevMode = TRACKING;
+RotatorMode _NextMode = TRACKING;
+
+RotatorMode GetCurrentMode()
+{
+	return _NextMode;
+}
+
+RotatorMode GetLastMode()
+{
+	return _PrevMode;
+}
+
+void ToggleMode(RotatorMode toggleMode) 
+{
+  _PrevMode = _NextMode;
+  _NextMode = toggleMode;
+}
+
+void ProcessCommands(double &gotoAz, double &gotoEl)
+{
+	char buffer[BufferSize];
+	char *data = buffer;
+  char incomingByte;
+	EasyCommParser parser;
+	while(Serial.available() > 0) 
+	{
+		incomingByte = Serial.read();
+		switch(incomingByte)
+		{
+			case 'r':
+				Serial.println("...Reset in progress...");
+				ToggleMode(RESET);
+				if (_PrevMode == RESET) Serial.println("...Reset Complete...");
+			break;
+			case 'b':
+				Serial.println("Debugging in progress: Press 'a' to abort...");
+				ToggleMode(DEBUGGING);
+			break;
+			case 'm':
+				Serial.println("Monitoring in progress: Press 'a' to abort...");
+				ToggleMode(MONITORING);
+			break;
+			case 'c':
+				Serial.println("Calibration in progress: Press 'a' to abort or 's' to save...");
+				ToggleMode(CALIBRATING);
+			break;
+			case 'a':
+				ToggleMode(TRACKING);
+				Serial.println("...Function Aborted...");
+			break;
+			case 's':
+				ToggleMode(STORING);
+				Serial.println("...Storing Calibration...");
+			break;
+		  case 'd':
+				Serial.println("Demo in Progres: Press 'a' to abort...");
+				ToggleMode(DEMONSTRATING);
+			break;
+			case 'h':
+				 Serial.println("Commands:");
+      	 Serial.println("az el -(0..360 0..90)");
+      	 Serial.println("r -Reset");
+      	 Serial.println("eNN.N -MagDecl");
+      	 Serial.println("c -Calibrate");
+         Serial.println("s -Save");
+         Serial.println("a -Abort");
+         Serial.println("d -Demo");
+         Serial.println("b -Debug");
+         Serial.println("m -Monitor");
+         Serial.println("p -Pause");
+			break;
+			case 'p':
+				if(_NextMode == PAUSING)
+				{
+					ToggleMode(TRACKING);
+				} else 
+				{
+					ToggleMode(PAUSING);
+					Serial.println("...Paused...");
+				}
+			break;
+			default: //process EasyComm II
+        parser.Parse(gotoAz, gotoEl);
+			break;
+		}
+	}
+
+}
+
 
 /*
  Getter properties for Parser,
@@ -106,6 +196,7 @@ int EasyCommParser::Parse(double &gotoAz, double &gotoEl)
 			  Serial.print("AZ");
 			  Serial.print(" ");
 			  Serial.print("EL");
+				ToggleMode(PAUSING);
 			  _orderStop = true;
 		  
 		  }

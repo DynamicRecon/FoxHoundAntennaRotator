@@ -9,19 +9,24 @@
 #include "consts.h"
 #include "MyMath.h"
 
-enum Tokens 
+enum RotatorMode
 {
-	UNKNOWN,
-	KEYWORD,
-	NUMBER,
-	OPERATOR,
-	EOL
-};
+  TRACKING, 
+  MONITORING, 
+  DEMONSTRATING, 
+  CALIBRATING, 
+  DEBUGGING, 
+  PAUSING,
+	RESET,
+	STORING
+};    //Rotator controller modes
 
-struct Token {
-	Tokens tok;
-	char *value;
-};
+RotatorMode GetCurrentMode();
+RotatorMode GetLastMode();
+void ToggleMode(RotatorMode toggleMode);
+
+void ProcessCommands(double &gotoAz, double &gotoEl);
+
 
 /*
   EasyCommParser Class:

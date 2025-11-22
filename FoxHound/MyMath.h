@@ -5,7 +5,8 @@
 #include <Arduino.h>
 
 //Math Vector Class
-class Vec {
+class Vec 
+{
   public:
     Vec();
     Vec(float I, float J, float K);
@@ -18,12 +19,19 @@ class Vec {
   private:
 };
 
+struct Filter 
+{
+   float Alpha;
+   int Last = 0;
+};
+
 //math helper funcs
 float DegToRads(float);
 float RadsToDegs(float);
+float DegToRads(double value);
 float DiffAngle(float a, float b);
 double VecDistance(Vec a, Vec b);
 Vec AzElToVec(double az, double el, int r);
-float Lpf(float Value, float alpha, int last);
+float Lpf(struct Filter *fil, float Value);
 
 #endif

@@ -19,10 +19,9 @@ struct Lsm
 {
   SensorType Type;
   float Alpha;
-  int LastPass;
-  int Mx, My, Mz, Gx, Gy, Gz;
-  float Md, Az, El;
-  Vec Me, Ge, Ms, Gs;
+  int Mx, My, Mz, Gx, Gy, Gz = 0;
+  float Az, El = 0.0f;
+  struct {float Md = 0.0f; Vec Me, Ge, Ms, Gs = Vec(0.0f,0.0f,0.0f); } Cal;
 };
 
 

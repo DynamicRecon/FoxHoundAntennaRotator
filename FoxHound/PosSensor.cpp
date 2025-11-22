@@ -14,6 +14,13 @@ struct Cal CalGX;
 struct Cal CalGY;
 struct Cal CalGZ;
 
+struct Filter FilMx;
+struct Filter FilMy;
+struct Filter FilMz;
+struct Filter FilGx;
+struct Filter FilGy;
+struct Filter FilGz;
+
 int _min = 32767;
 int _max = -32768;
 
@@ -95,9 +102,9 @@ void _ReadG(struct Lsm *lsm)
           lsm->Gz = -((zh << 8) | zl);
 
           //Low pass filter the sensor data as it improves the calibration procedure
-          lsm->Gx = Lpf(lsm->Gx, lsm->Alpha, lsm->LastPass);
-          lsm->Gy = Lpf(lsm->Gy, lsm->Alpha, lsm->LastPass);
-          lsm->Gz = Lpf(lsm->Gz, lsm->Alpha, lsm->LastPass);
+          lsm->Gx = Lpf(&FilGx, lsm->Gx);
+          lsm->Gy = Lpf(&FilGy, lsm->Gy);
+          lsm->Gz = Lpf(&FilGz, lsm->Gz);
       }
      break;
      case LSM303DLHC:
@@ -121,9 +128,9 @@ void _ReadG(struct Lsm *lsm)
         lsm->Gz = -((zh << 8) | zl);
 
         //Low pass filter the sensor data as it improves the calibration procedure
-        lsm->Gx = Lpf(lsm->Gx, lsm->Alpha, lsm->LastPass);
-        lsm->Gy = Lpf(lsm->Gy, lsm->Alpha, lsm->LastPass);
-        lsm->Gz = Lpf(lsm->Gz, lsm->Alpha, lsm->LastPass);
+        lsm->Gx = Lpf(&FilGx, lsm->Gx);
+        lsm->Gy = Lpf(&FilGy, lsm->Gy);
+        lsm->Gz = Lpf(&FilGz, lsm->Gz);
       }
      break;
    }
@@ -154,9 +161,9 @@ void _ReadM(struct Lsm *lsm)
         lsm->Mz = ((zh << 8) | zl);
 
         //Low pass filter the sensor data as it improves the calibration procedure
-        lsm->Mx = Lpf(lsm->Mx, lsm->Alpha, lsm->LastPass);
-        lsm->My = Lpf(lsm->My, lsm->Alpha, lsm->LastPass);
-        lsm->Mz = Lpf(lsm->Mz, lsm->Alpha, lsm->LastPass);
+        lsm->Mx = Lpf(&FilMx, lsm->Mx);
+        lsm->My = Lpf(&FilMy, lsm->My);
+        lsm->Mz = Lpf(&FilMz, lsm->Mz);
 
       }
      break;
@@ -181,9 +188,9 @@ void _ReadM(struct Lsm *lsm)
           lsm->Mz = ((zh << 8) | zl);
 
           //Low pass filter the sensor data as it improves the calibration procedure
-          lsm->Mx = Lpf(lsm->Mx, lsm->Alpha, lsm->LastPass);
-          lsm->My = Lpf(lsm->My, lsm->Alpha, lsm->LastPass);
-          lsm->Mz = Lpf(lsm->Mz, lsm->Alpha, lsm->LastPass);
+          lsm->Mx = Lpf(&FilMx, lsm->Mx);
+          lsm->My = Lpf(&FilMy, lsm->My);
+          lsm->Mz = Lpf(&FilMz, lsm->Mz);
        }
      break;
     
@@ -228,6 +235,14 @@ void CalStart(struct Lsm *lsm)
 void Begin(struct Lsm *lsm)
 {
    ResetSensor(lsm);
+   FilGx.Alpha = lsm->Alpha;
+   FilGy.Alpha = lsm->Alpha;
+   FilGz.Alpha = lsm->Alpha;
+
+   FilMx.Alpha = lsm->Alpha;
+   FilMy.Alpha = lsm->Alpha;
+   FilMz.Alpha = lsm->Alpha;
+
    for(int i = 0; i < 50; i++) ReadGM(lsm);
 }
 
@@ -244,11 +259,11 @@ bool Calibrate(struct Lsm *lsm)
    if(changed)
    {
      //Calculate the error vectors
-    lsm->Me = Vec(CalMX.Offset, CalMY.Offset, CalMZ.Offset);
-    lsm->Ge = Vec(CalGX.Offset, CalGY.Offset, CalGZ.Offset);
+    lsm->Cal.Me = Vec(CalMX.Offset, CalMY.Offset, CalMZ.Offset);
+    lsm->Cal.Ge = Vec(CalGX.Offset, CalGY.Offset, CalGZ.Offset);
     //Caclulate the scaling vectors
-    lsm->Ms = Vec(CalMX.Scale, CalMY.Scale, CalMZ.Scale);
-    lsm->Gs = Vec(CalGX.Scale, CalGY.Scale, CalGZ.Scale);
+    lsm->Cal.Ms = Vec(CalMX.Scale, CalMY.Scale, CalMZ.Scale);
+    lsm->Cal.Gs = Vec(CalGX.Scale, CalGY.Scale, CalGZ.Scale);
    }
 
 }
@@ -267,8 +282,8 @@ Vec GetVector(struct Lsm *lsm)
   //Get the unit vectors for the earth's magnetic and gravitational fields
   //For each component subtract the error and divide by the scaling factor
    ReadGM(lsm);
-   Vec M = Vec((lsm->Mx - lsm->Me.i) / lsm->Ms.i, (lsm->My - lsm->Me.j) / lsm->Ms.j, (lsm->Mz - lsm->Me.k) / lsm->Ms.k).Unit();
-   Vec G = Vec((lsm->Gx - lsm->Ge.i) / lsm->Ms.i, (lsm->Gy - lsm->Ge.j) / lsm->Gs.j, (lsm->Gz - lsm->Ge.k) / lsm->Gs.k).Unit();
+   Vec M = Vec((lsm->Mx - lsm->Cal.Me.i) / lsm->Cal.Ms.i, (lsm->My - lsm->Cal.Me.j) / lsm->Cal.Ms.j, (lsm->Mz - lsm->Cal.Me.k) / lsm->Cal.Ms.k).Unit();
+   Vec G = Vec((lsm->Gx - lsm->Cal.Ge.i) / lsm->Cal.Ms.i, (lsm->Gy - lsm->Cal.Ge.j) / lsm->Cal.Gs.j, (lsm->Gz - lsm->Cal.Ge.k) / lsm->Cal.Gs.k).Unit();
 
   //Define the antenna axes as the main reference axes
   const Vec X = Vec(1.0, 0.0, 0.0);         //The antenna X vector
@@ -287,7 +302,7 @@ Vec GetVector(struct Lsm *lsm)
   float Zu = Z.Dot(U);                     //The scalar projection of Z onto U
 
   //Compute the true antenna pointing angles relative to the magnetic ground axes
-  lsm->Az = atan2(-Xn, Xe) * RAD2DEG + lsm->Md;  //The azimuth angle in degrees using the X-axis
+  lsm->Az = atan2(-Xn, Xe) * RAD2DEG + lsm->Cal.Md;  //The azimuth angle in degrees using the X-axis
   lsm->El = atan2(Yu, Zu) * RAD2DEG;            //The elevation angle in degrees using the Y-axis
 
   if (lsm->Az > 180) lsm->Az = lsm->Az - 360;           //Ensure azimuth is in -180..180 format after adding D

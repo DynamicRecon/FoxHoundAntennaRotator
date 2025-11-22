@@ -8,9 +8,10 @@ void _Infrared(struct MotorData *ptrMotorData, float err)
 void _PwmDir(struct MotorData *ptrMotorData, float err)
 {
    //Calculate the speed. Then filter the result.
-   ptrMotorData->LastPass = 0; //reset filter.
+   struct Filter fil;
+   fil.Alpha = ptrMotorData->Alpha;
    float dv = constrain(err * ptrMotorData->Gain, -255, 255);
-   dv = Lpf(dv, ptrMotorData->Alpha, ptrMotorData->LastPass);
+   dv = Lpf(&fil, dv);
 
    //For interfacing with the LMD18200T DC Motor H-Bridge
    //Set motor speed;
@@ -29,9 +30,10 @@ void _PwmDir(struct MotorData *ptrMotorData, float err)
 void _FwdRev(struct MotorData *ptrMotorData, float err)
 {
   //Calculate the speed. Then filter the result.
-  ptrMotorData->LastPass = 0; //reset filter.
-  float dv = constrain(err * ptrMotorData->Gain, -255, 255);
-  dv = Lpf(dv, ptrMotorData->Alpha, ptrMotorData->LastPass);
+   struct Filter fil;
+   fil.Alpha = ptrMotorData->Alpha;
+   float dv = constrain(err * ptrMotorData->Gain, -255, 255);
+   dv = Lpf(&fil, dv);
 
   //For interfacing with L298N H-bridge.
   //Set the Motor Speed.
@@ -71,10 +73,11 @@ void _AcMotr(struct MotorData *ptrMotorData, float err)
 
    //vars
    unsigned long offTime;
-   ptrMotorData->LastPass = 0; //reset filter.
+   struct Filter fil;
+   fil.Alpha = ptrMotorData->Alpha;
 
    //Low pass Filter (reduce abrupt changes in speed)
-   err = Lpf(err, ptrMotorData->Alpha, ptrMotorData->LastPass);
+   err = Lpf(&fil, err);
    float absErr = abs(err); //Get the abs magnitude of the error.
 
    //check if the error is above the min error.

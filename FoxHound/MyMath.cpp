@@ -56,6 +56,11 @@ float RadsToDegs(float value)
   return (180.0 / M_PI) * value; 
 }
 
+float DegToRads(double value)
+{
+  return value * (M_PI / 180);
+}
+
 float DiffAngle(float a, float b) 
 {
   //Calculate the acute angle between two angles in -180..180 degree format
@@ -67,18 +72,18 @@ float DiffAngle(float a, float b)
 
 Vec AzElToVec(double az, double el, int r)
 {
-   double x = r * cos(el) * cos(az);
-   double y = r * cos(el) * sin(az);
-   double z = r * sin(el);
+   double x = r * cos(DegToRads(el)) * cos(DegToRads(az));
+   double y = r * cos(DegToRads(el)) * sin(DegToRads(az));
+   double z = r * sin(DegToRads(el));
    return Vec(float(x), float(y), float(z));
 }
 
 /*Low Pass Filter for smoothing waveforms*/
-float Lpf(float Value, float alpha, int last) 
+float Lpf(struct Filter *fil, float Value)
 {
   //Low pass filter - Decrease alpha to increase damping factor
-  float result = (alpha * Value) + last * (1 - alpha);
-  last = result;
+  float result = (fil->Alpha * Value) + fil->Last * (1 - fil->Alpha);
+  fil->Last = result;
   return result;
 }
 
